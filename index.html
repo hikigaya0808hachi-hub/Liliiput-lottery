@@ -83,8 +83,7 @@ function updateRemaining(){
 
     const remaining = drawOrder.length - currentDraw;
 
-document.getElementById("remaining").innerHTML =
-   "本日の抽選人数：" + currentDraw + "人";
+document.getElementById("remaining").innerHTML = "";
     const remainingItems = drawOrder.slice(currentDraw);
 
    const specialCount = 1 - remainingItems.filter(p => p.includes("特賞")).length;
@@ -308,8 +307,6 @@ loadData();
 <h1>ガトーリリピュット<br>11周年記念抽選会</h1>
 
 <p>皆さまのおかげで11周年<br>いつもありがとうございます</p>
-
-<img src="tart.webp" class="tart">
 
 <div id="slot-container">
     <div id="slot">🎁 抽選スタート！</div>
