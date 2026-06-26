@@ -83,22 +83,21 @@ function updateRemaining(){
 
     const remaining = drawOrder.length - currentDraw;
 
-    document.getElementById("remaining").innerHTML =
-        "残り景品数：" + remaining;
-
+document.getElementById("remaining").innerHTML =
+   "本日の抽選人数：" + currentDraw + "人";
     const remainingItems = drawOrder.slice(currentDraw);
 
-    const specialCount = remainingItems.filter(p => p.includes("特賞")).length;
-    const firstCount = remainingItems.filter(p => p.includes("1等")).length;
-    const secondCount = remainingItems.filter(p => p.includes("2等")).length;
-    const thirdCount = remainingItems.filter(p => p.includes("3等")).length;
-    const thanksCount = remainingItems.filter(p => p.includes("参加賞")).length;
+   const specialCount = 1 - remainingItems.filter(p => p.includes("特賞")).length;
+const firstCount = 3 - remainingItems.filter(p => p.includes("1等")).length;
+const secondCount = 10 - remainingItems.filter(p => p.includes("2等")).length;
+const thirdCount = 36 - remainingItems.filter(p => p.includes("3等")).length;
+const thanksCount = 50 - remainingItems.filter(p => p.includes("参加賞")).length;
 
     const statusBox = document.getElementById("prize-status");
 
     if(statusBox){
         statusBox.innerHTML =
-            "<h3>本日の残数</h3>" +
+            "<h3>本日の当選状況</h3>" +
             "現在：" + currentDraw + "回目 / 100回<br><br>" +
             "特賞：" + specialCount + " / 1<br>" +
             "1等：" + firstCount + " / 3<br>" +
