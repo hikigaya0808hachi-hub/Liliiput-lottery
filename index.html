@@ -5,6 +5,373 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ガトーリリピュット11周年記念抽選会</title>
 
+<script>
+
+const prizes = [
+    "🎁 参加賞 50円券",
+    "🥉 3等 100円券",
+    "🥈 2等 500円券",
+    "🥇 1等 焼菓子詰め合わせ 2000円分",
+    "🎊 特賞 タルト3000円分引換券"
+];
+
+let drawOrder = [];
+let currentDraw = 0;
+let spinning = false;
+
+function createDrawOrder(){
+
+    const expectedInput = document.getElementById("expectedCount");
+    const expected = expectedInput ? Number(expectedInput.value) : 30;
+
+    const total = 90;
+
+    drawOrder = Array(total).fill("🎁 参加賞 50円券");
+
+    const specialStart = Math.max(3, Math.floor(expected * 0.35));
+    const specialEnd = Math.max(specialStart + 1, Math.floor(expected * 0.75));
+
+    placePrize("🎊 特賞 タルト3000円分引換券", specialStart, specialEnd);
+
+    placePrize("🥇 1等 焼菓子詰め合わせ 2000円分", 2, Math.floor(expected * 0.35));
+    placePrize("🥇 1等 焼菓子詰め合わせ 2000円分", Math.floor(expected * 0.25), Math.floor(expected * 0.6));
+    placePrize("🥇 1等 焼菓子詰め合わせ 2000円分", Math.floor(expected * 0.45), expected);
+
+    for(let i = 0; i < 10; i++){
+        placePrize("🥈 2等 500円券", 1, expected);
+    }
+
+    for(let i = 0; i < 36; i++){
+        placePrize("🥉 3等 100円券", 1, total);
+    }
+
+    currentDraw = 0;
+    saveData();
+    updateRemaining();
+}
+
+function placePrize(prize, start, end){
+
+    let available = [];
+
+    for(let i = start - 1; i <= end - 1; i++){
+        if(drawOrder[i] === "🎁 参加賞 50円券"){
+            available.push(i);
+        }
+    }
+
+    if(available.length === 0) return;
+
+    const index = available[Math.floor(Math.random() * available.length)];
+    drawOrder[index] = prize;
+}
+
+function drawPrize(){
+
+    if(currentDraw >= drawOrder.length){
+        return "抽選終了";
+    }
+
+    const result = drawOrder[currentDraw];
+    currentDraw++;
+
+    saveData();
+    return result;
+}
+
+function updateRemaining(){
+
+    const remaining = drawOrder.length - currentDraw;
+
+    document.getElementById("remaining").innerHTML =
+        "残り景品数：" + remaining;
+
+    const remainingItems = drawOrder.slice(currentDraw);
+
+    const specialCount = remainingItems.filter(p => p.includes("特賞")).length;
+    const firstCount = remainingItems.filter(p => p.includes("1等")).length;
+    const secondCount = remainingItems.filter(p => p.includes("2等")).length;
+    const thirdCount = remainingItems.filter(p => p.includes("3等")).length;
+    const thanksCount = remainingItems.filter(p => p.includes("参加賞")).length;
+
+    const statusBox = document.getElementById("prize-status");
+
+    if(statusBox){
+        statusBox.innerHTML =
+            "<h3>本日の残数</h3>" +
+            "現在：" + currentDraw + "回目 / 100回<br><br>" +
+            "特賞：" + specialCount + " / 1<br>" +
+            "1等：" + firstCount + " / 3<br>" +
+            "2等：" + secondCount + " / 10<br>" +
+            "3等：" + thirdCount + " / 36<br>" +
+            "参加賞：" + thanksCount + " / 50<br><br>" +
+            "特賞ゾーン：30〜60回目<br>" +
+            "1等ゾーン：5〜70 / 2〜35 / 2〜50回目";
+    }
+}
+
+function resetPrizePool(){
+    createDrawOrder();
+
+    document.getElementById("slot").innerHTML = "🎁 抽選スタート！";
+    document.getElementById("result-message").innerHTML = "";
+    document.getElementById("drawButton").style.display = "inline-block";
+    document.getElementById("nextButton").style.display = "none";
+
+    alert("本日分を100本にリセットしました");
+}
+
+function showResultMessage(result){
+    const message = document.getElementById("result-message");
+
+    if(result.includes("特賞")){
+        message.innerHTML =
+        '<span class="special">🎊 特賞おめでとうございます！<br>タルト3000円分引換券です！ 🎊</span>';
+
+        document.body.classList.add("special-mode");
+        startConfetti();
+
+        setTimeout(() => {
+            document.body.classList.remove("special-mode");
+        },5000);
+    }
+    else if(result.includes("1等")){
+        message.innerHTML =
+        '<span class="first">🥇 1等おめでとうございます！<br>焼菓子詰め合わせです！</span>';
+    }
+    else if(result.includes("2等")){
+        message.innerHTML =
+        '<span class="second">🥈 2等おめでとうございます！<br>500円券です！</span>';
+    }
+    else if(result.includes("3等")){
+        message.innerHTML =
+        '<span class="third">🥉 3等おめでとうございます！<br>100円券です！</span>';
+    }
+    else if(result.includes("参加賞")){
+        message.innerHTML =
+        '<span class="thanks">ご参加ありがとうございました✨<br>50円券をお渡しします</span>';
+    }
+}
+
+function startLottery(){
+
+    if(spinning) return;
+
+    if(currentDraw >= drawOrder.length){
+        alert("本日の抽選は終了しました！");
+        return;
+    }
+
+    spinning = true;
+    document.getElementById("result-message").innerHTML = "";
+
+    let count = 0;
+    const slot = document.getElementById("slot");
+
+    const timer = setInterval(() => {
+
+        const randomPrize =
+            prizes[Math.floor(Math.random() * prizes.length)];
+
+        slot.style.transform = "translateY(-105px)";
+
+        setTimeout(() => {
+            slot.innerHTML = randomPrize;
+            slot.style.transform = "translateY(0px)";
+        },50);
+
+        count++;
+
+        if(count > 32){
+            clearInterval(timer);
+
+            const result = drawPrize();
+
+            setTimeout(() => {
+                slot.innerHTML = result;
+                updateRemaining();
+                showResultMessage(result);
+
+                document.getElementById("drawButton").style.display = "none";
+                document.getElementById("nextButton").style.display = "inline-block";
+
+                spinning = false;
+            },150);
+        }
+
+    },100);
+}
+
+function resetScreen(){
+
+    document.getElementById("slot").innerHTML =
+    "🎁 抽選スタート！";
+
+    document.getElementById("result-message").innerHTML = "";
+
+    document.getElementById("drawButton").style.display =
+    "inline-block";
+
+    document.getElementById("nextButton").style.display =
+    "none";
+}
+
+function openAdmin(){
+    const pass = prompt("店員用パスワードを入力してください");
+
+    if(pass === "1234"){
+        document.getElementById("admin-panel").style.display = "block";
+    }else{
+        alert("パスワードが違います");
+    }
+}
+
+function closeAdmin(){
+    document.getElementById("admin-panel").style.display = "none";
+}
+
+function testEffect(type){
+    let result = "";
+
+    if(type === "special"){
+        result = "🎊 特賞 タルト3000円分引換券";
+    }
+    else if(type === "first"){
+        result = "🥇 1等 焼菓子詰め合わせ 2000円分";
+    }
+    else if(type === "second"){
+        result = "🥈 2等 500円券";
+    }
+    else if(type === "third"){
+        result = "🥉 3等 100円券";
+    }
+    else{
+        result = "🎁 参加賞 50円券";
+    }
+
+    document.getElementById("slot").innerHTML = result;
+    showResultMessage(result);
+}
+
+function startConfetti(){
+
+    for(let i = 0; i < 80; i++){
+
+        const confetti = document.createElement("div");
+        confetti.className = "confetti";
+
+        confetti.style.left = Math.random() * 100 + "vw";
+        confetti.style.backgroundColor =
+            ["#f5c542","#e85d75","#4a9f70","#6ca0dc","#ffffff"]
+            [Math.floor(Math.random() * 5)];
+
+        confetti.style.animationDuration =
+            (Math.random() * 2 + 2) + "s";
+
+        document.body.appendChild(confetti);
+
+        setTimeout(() => {
+            confetti.remove();
+        },4000);
+    }
+}
+
+function saveData(){
+    localStorage.setItem("drawOrder", JSON.stringify(drawOrder));
+    localStorage.setItem("currentDraw", currentDraw);
+}
+
+function loadData(){
+    const savedOrder = localStorage.getItem("drawOrder");
+    const savedCurrent = localStorage.getItem("currentDraw");
+
+    if(savedOrder){
+        drawOrder = JSON.parse(savedOrder);
+        currentDraw = Number(savedCurrent || 0);
+        updateRemaining();
+    }else{
+        createDrawOrder();
+    }
+}
+
+loadData();
+
+</script>
+
+</head>
+
+<body>
+
+<div class="card">
+
+<img src="logo.png" class="logo">
+
+<h1>ガトーリリピュット<br>11周年記念抽選会</h1>
+
+<p>皆さまのおかげで11周年<br>いつもありがとうございます</p>
+
+<img src="tart.webp" class="tart">
+
+<div id="slot-container">
+    <div id="slot">🎁 抽選スタート！</div>
+</div>
+
+<div id="result-message"></div>
+
+<button id="drawButton" onclick="startLottery()">
+抽選スタート
+</button>
+
+<button
+id="nextButton"
+onclick="resetScreen()"
+style="display:none;">
+次のお客様
+</button>
+
+
+<div id="remaining">残り景品数：100</div>
+
+<br>
+<button class="admin-btn" onclick="openAdmin()">店員用</button>
+
+<div id="admin-panel">
+    <h2>店員用 演出テスト</h2>
+    <button class="admin-btn" onclick="closeAdmin()">
+閉じる
+</button>
+    <p>※本数は減りません</p>
+
+    <button class="admin-btn" onclick="testEffect('special')">特賞演出</button>
+    <button class="admin-btn" onclick="testEffect('first')">1等演出</button>
+    <button class="admin-btn" onclick="testEffect('second')">2等演出</button>
+    <button class="admin-btn" onclick="testEffect('third')">3等演出</button>
+    <button class="admin-btn" onclick="testEffect('thanks')">参加賞演出</button>
+
+    <br><br>
+    <p>今日の予想抽選人数</p>
+
+<input
+id="expectedCount"
+type="number"
+value="30"
+min="10"
+max="100"
+class="admin-btn"
+style="width:120px;">
+人
+    <button class="admin-btn" onclick="resetPrizePool()">本日分をリセット</button>
+<br><br>
+
+
+<hr>
+
+<div id="prize-status"></div>
+
+</div>
+
+</div>
+
 <style>
 body{
     font-family:sans-serif;
@@ -25,7 +392,6 @@ body{
 h1{ color:#4a5c45; }
 .logo{ width:180px; }
 .tart{ width:400px; max-width:90%; border-radius:18px; }
-
 #slot-container{
     width:560px;
     max-width:95%;
@@ -66,7 +432,6 @@ button{
     color:#b8860b;
     font-size:32px;
 }
-
 body.special-mode{
     background:#f7d774;
 }
@@ -74,7 +439,6 @@ body.special-mode{
 .second{ color:#666; font-size:26px; }
 .third{ color:#8b5a2b; font-size:24px; }
 .thanks{ color:#4a5c45; font-size:22px; }
-
 #admin-panel{
     display:none;
     margin-top:25px;
@@ -82,7 +446,6 @@ body.special-mode{
     background:#f6efe4;
     border-radius:18px;
 }
-
 .confetti{
     position:fixed;
     top:-20px;
@@ -92,7 +455,6 @@ body.special-mode{
     animation:fall 3s linear forwards;
     z-index:9999;
 }
-
 @keyframes fall{
     to{
         transform:translateY(110vh) rotate(720deg);
@@ -100,301 +462,6 @@ body.special-mode{
     }
 }
 </style>
-</head>
-
-<body>
-
-<div class="card">
-
-<img src="logo.png" class="logo">
-
-<h1>ガトーリリピュット<br>11周年記念抽選会</h1>
-
-<p>皆さまのおかげで11周年<br>いつもありがとうございます</p>
-
-<div id="slot-container">
-    <div id="slot">🎁 抽選スタート！</div>
-</div>
-
-<div id="result-message"></div>
-
-<button id="drawButton" onclick="startLottery()">
-抽選スタート
-</button>
-
-<button
-id="nextButton"
-onclick="resetScreen()"
-style="display:none;">
-次のお客様
-</button>
-
- <div id="remaining" style="display:none;">残り景品数：100</div>
-    
-<button class="admin-btn" onclick="openAdmin()">店員用</button>
-
-<div id="admin-panel">
-    <h2>店員用 演出テスト</h2>
-    <button class="admin-btn" onclick="closeAdmin()">
-閉じる
-</button>
-    <p>※本数は減りません</p>
-
-    <button class="admin-btn" onclick="testEffect('special')">特賞演出</button>
-    <button class="admin-btn" onclick="testEffect('first')">1等演出</button>
-    <button class="admin-btn" onclick="testEffect('second')">2等演出</button>
-    <button class="admin-btn" onclick="testEffect('third')">3等演出</button>
-    <button class="admin-btn" onclick="testEffect('thanks')">参加賞演出</button>
-
-    <br><br>
-    <button class="admin-btn" onclick="resetPrizePool()">本日分をリセット</button>
-<br><br>
-
-
-<hr>
-
-<div id="prize-status"></div>
-
-</div>
-
-<script>
-    function saveData(){
-    localStorage.setItem("prizePool", JSON.stringify(prizePool));
-}
-
-function loadData(){
-    const saved = localStorage.getItem("prizePool");
-
-    if(saved){
-        prizePool = JSON.parse(saved);
-        updateRemaining();
-    }
-}
-
-function startConfetti(){
-
-    for(let i = 0; i < 80; i++){
-
-        const confetti = document.createElement("div");
-        confetti.className = "confetti";
-
-        confetti.style.left = Math.random() * 100 + "vw";
-        confetti.style.backgroundColor =
-            ["#f5c542","#e85d75","#4a9f70","#6ca0dc","#ffffff"]
-            [Math.floor(Math.random() * 5)];
-
-        confetti.style.animationDuration =
-            (Math.random() * 2 + 2) + "s";
-
-        document.body.appendChild(confetti);
-
-        setTimeout(() => {
-            confetti.remove();
-        },4000);
-    }
-}
-const prizes = [
-    "🎁 参加賞 50円券",
-    "🥉 3等 100円券",
-    "🥈 2等 500円券",
-    "🥇 1等 焼菓子詰め合わせ 2000円分",
-    "🎊 特賞 タルト3000円分引換券"
-];
-
-let prizePool = [];
-
-function resetPrizePool(){
-    prizePool = [];
-    prizePool.push(...Array(1).fill("🎊 特賞 タルト3000円分引換券"));
-    prizePool.push(...Array(3).fill("🥇 1等 焼菓子詰め合わせ 2000円分"));
-    prizePool.push(...Array(10).fill("🥈 2等 500円券"));
-    prizePool.push(...Array(36).fill("🥉 3等 100円券"));
-    prizePool.push(...Array(50).fill("🎁 参加賞 50円券"));
-    updateRemaining();
-    saveData();
-    document.getElementById("slot").innerHTML = "🎁 抽選スタート！";
-    document.getElementById("result-message").innerHTML = "";
-    alert("本日分を100本にリセットしました");
-}
-
-loadData();
-
-if(prizePool.length === 0){
-    resetPrizePool();
-}
-
-let spinning = false;
-
-function drawPrize(){
-    if(prizePool.length === 0){
-        return "抽選終了";
-    }
-
-    const index = Math.floor(Math.random() * prizePool.length);
-    const result = prizePool[index];
-    prizePool.splice(index,1);
-    return result;
-}
-
-function updateRemaining(){
-
-    document.getElementById("remaining").innerHTML =
-        "残り景品数：" + prizePool.length;
-
-    const status = {
-        special: prizePool.filter(p => p.includes("特賞")).length,
-        first: prizePool.filter(p => p.includes("1等")).length,
-        second: prizePool.filter(p => p.includes("2等")).length,
-        third: prizePool.filter(p => p.includes("3等")).length,
-        thanks: prizePool.filter(p => p.includes("参加賞")).length
-    };
-
-    document.getElementById("prize-status").innerHTML =
-        "<h3>本日の残数</h3>" +
-        "特賞：" + status.special + " / 1<br>" +
-        "1等：" + status.first + " / 3<br>" +
-        "2等：" + status.second + " / 10<br>" +
-        "3等：" + status.third + " / 36<br>" +
-        "参加賞：" + status.thanks + " / 50<br>";
-}
-
-function showResultMessage(result){
-    const message = document.getElementById("result-message");
-
-    if(result.includes("特賞")){
-
-    message.innerHTML =
-    '<span class="special">🎊 特賞おめでとうございます！</span>';
-
-    document.body.classList.add("special-mode");
-
-    startConfetti();
-
-    setTimeout(() => {
-        document.body.classList.remove("special-mode");
-    },5000);
-
-}
-    else if(result.includes("1等")){
-        message.innerHTML =
-        '<span class="first">🥇 1等おめでとうございます！<br>焼菓子詰め合わせです！</span>';
-    }
-    else if(result.includes("2等")){
-        message.innerHTML =
-        '<span class="second">🥈 2等おめでとうございます！<br>500円券です！</span>';
-    }
-    else if(result.includes("3等")){
-        message.innerHTML =
-        '<span class="third">🥉 3等おめでとうございます！<br>100円券です！</span>';
-    }
-    else if(result.includes("参加賞")){
-        message.innerHTML =
-        '<span class="thanks">ご参加ありがとうございました✨<br>50円券をお渡しします</span>';
-    }
-}
-
-function startLottery(){
-    if(spinning) return;
-
-    if(prizePool.length === 0){
-        alert("本日の抽選は終了しました！");
-        return;
-    }
-
-    spinning = true;
-    document.getElementById("result-message").innerHTML = "";
-
-    let count = 0;
-    const slot = document.getElementById("slot");
-
-    const timer = setInterval(() => {
-        const randomPrize =
-            prizes[Math.floor(Math.random() * prizes.length)];
-
-        slot.style.transform = "translateY(-105px)";
-
-        setTimeout(() => {
-            slot.innerHTML = randomPrize;
-            slot.style.transform = "translateY(0px)";
-        },50);
-
-        count++;
-
-        if(count > 32){
-            clearInterval(timer);
-
-            const result = drawPrize();
-
-            setTimeout(() => {
-                slot.innerHTML = result;
-                updateRemaining();
-saveData();
-showResultMessage(result);
-
-document.getElementById("drawButton").style.display = "none";
-document.getElementById("nextButton").style.display = "inline-block";
-
-spinning = false;
-            },150);
-        }
-    },100);
-}
-
-function openAdmin(){
-    const pass = prompt("店員用パスワードを入力してください");
-
-    if(pass === "1234"){
-        document.getElementById("admin-panel").style.display = "block";
-    }else{
-        alert("パスワードが違います");
-    }
-}
-
-function testEffect(type){
-    let result = "";
-
-    if(type === "special"){
-        result = "🎊 特賞 タルト3000円分引換券";
-    }
-    else if(type === "first"){
-        result = "🥇 1等 焼菓子詰め合わせ 2000円分";
-    }
-    else if(type === "second"){
-        result = "🥈 2等 500円券";
-    }
-    else if(type === "third"){
-        result = "🥉 3等 100円券";
-    }
-    else{
-        result = "🎁 参加賞 50円券";
-    }
-
-    document.getElementById("slot").innerHTML = result;
-    showResultMessage(result);
-}
-
-function closeAdmin(){
-
-    document.getElementById("admin-panel").style.display = "none";
-
-}
-function resetScreen(){
-
-    document.getElementById("slot").innerHTML =
-    "🎁 抽選スタート！";
-
-    document.getElementById("result-message").innerHTML =
-    "";
-
-    document.getElementById("drawButton").style.display =
-    "inline-block";
-
-    document.getElementById("nextButton").style.display =
-    "none";
-
-}
-</script>
-
 
 </body>
 </html>
