@@ -295,6 +295,58 @@ window.addEventListener("DOMContentLoaded", () => {
     loadData();
 });
 
+    function getPrizeName(type){
+    if(type === "special") return "🎊 特賞 タルト3000円分引換券";
+    if(type === "first") return "🥇 1等 焼菓子詰め合わせ 2000円分";
+    if(type === "second") return "🥈 2等 500円券";
+    if(type === "third") return "🥉 3等 100円券";
+    return "🎁 参加賞 50円券";
+}
+
+function manualPrize(type, action){
+    const prizeName = getPrizeName(type);
+
+    if(!confirm("本当に修正しますか？")){
+        return;
+    }
+
+    if(action === "plus"){
+        drawOrder[currentDraw - 1] = prizeName;
+    }
+
+    if(action === "minus"){
+        drawOrder.splice(currentDraw, 0, prizeName);
+        currentDraw--;
+        if(currentDraw < 0) currentDraw = 0;
+    }
+
+    saveData();
+    updateRemaining();
+
+    alert("修正しました");
+}
+
+function manualDrawCount(amount){
+    if(!confirm("抽選人数を修正しますか？")){
+        return;
+    }
+
+    currentDraw += amount;
+
+    if(currentDraw < 0){
+        currentDraw = 0;
+    }
+
+    if(currentDraw > drawOrder.length){
+        currentDraw = drawOrder.length;
+    }
+
+    saveData();
+    updateRemaining();
+
+    alert("抽選人数を修正しました");
+}
+
 </script>
 
 </head>
@@ -364,7 +416,34 @@ style="width:120px;">
 <hr>
 
 <div id="prize-status"></div>
+<hr>
 
+<h3>手動修正</h3>
+
+<p>特賞</p>
+<button class="admin-btn" onclick="manualPrize('special','minus')">− 特賞</button>
+<button class="admin-btn" onclick="manualPrize('special','plus')">＋ 特賞</button>
+
+<p>1等</p>
+<button class="admin-btn" onclick="manualPrize('first','minus')">− 1等</button>
+<button class="admin-btn" onclick="manualPrize('first','plus')">＋ 1等</button>
+
+<p>2等</p>
+<button class="admin-btn" onclick="manualPrize('second','minus')">− 2等</button>
+<button class="admin-btn" onclick="manualPrize('second','plus')">＋ 2等</button>
+
+<p>3等</p>
+<button class="admin-btn" onclick="manualPrize('third','minus')">− 3等</button>
+<button class="admin-btn" onclick="manualPrize('third','plus')">＋ 3等</button>
+
+<p>参加賞</p>
+<button class="admin-btn" onclick="manualPrize('thanks','minus')">− 参加賞</button>
+<button class="admin-btn" onclick="manualPrize('thanks','plus')">＋ 参加賞</button>
+
+<p>抽選人数</p>
+<button class="admin-btn" onclick="manualDrawCount(-1)">− 1人</button>
+<button class="admin-btn" onclick="manualDrawCount(1)">＋ 1人</button>
+    
 </div>
 
 </div>
