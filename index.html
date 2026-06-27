@@ -24,7 +24,7 @@ function createDrawOrder(){
     const expectedInput = document.getElementById("expectedCount");
     const expected = expectedInput ? Number(expectedInput.value) : 30;
 
-    const total = 90;
+    const total = 100;
 
     drawOrder = Array(total).fill("🎁 参加賞 50円券");
 
@@ -291,7 +291,9 @@ function loadData(){
     }
 }
 
-loadData();
+window.addEventListener("DOMContentLoaded", () => {
+    loadData();
+});
 
 </script>
 
